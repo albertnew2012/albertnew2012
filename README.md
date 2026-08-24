@@ -46,7 +46,8 @@ discrete action tokenization vs. continuous regression; imitation-learning fine-
 closed-loop future-state prediction; sim-to-real transfer; teleoperation & demonstration data pipelines
 
 **Generative & Foundation Models** — LLMs, VLMs, multimodal fusion architectures, LoRA / PEFT fine-tuning,
-diffusion models, VAE/GAN, agentic multi-model pipelines
+diffusion models, VAE/GAN, agentic multi-model pipelines, LLM-as-judge evaluation loops, real-time
+speech pipelines (STT / TTS / VAD)
 
 **3D Perception & Spatial Reasoning** — Camera & LiDAR 3D detection and tracking, BEV representation learning,
 occupancy prediction, LiDAR–camera fusion, sensor calibration, auto-labeling, end-to-end driving models
@@ -87,6 +88,18 @@ scheme determine the control frequency you can hit on embedded compute.
 | [openvla](https://github.com/albertnew2012/openvla) | Autoregressive VLA baseline — discrete action tokens over a VLM backbone. |
 | [openpi](https://github.com/albertnew2012/openpi) | π0's flow-matching action expert, the contrast case to token decoding. |
 | [nanoVLM](https://github.com/albertnew2012/nanoVLM) | Minimal VLM training loop — the backbone half of a VLA, stripped down. |
+
+## Agentic Systems
+
+Closed-loop systems where an LLM is the controller, not just the generator — the same pattern behind
+the agentic auto-labeling engine I built at Lucid.
+
+| Repo | What it is |
+|---|---|
+| [voice-agent-dev](https://github.com/albertnew2012/voice-agent-dev) | **Self-improving voice agent harness.** A Judge LLM reads each call's transcript, metrics, and ground truth, then applies a corrective intervention before the next call — no human in the loop. Three-action discrete control space: STT hotword bias, a memory note appended to the system prompt, and a hot-swapped Whisper LoRA accent adapter. Real-time pipeline is Pipecat with Whisper STT, Ollama/OpenAI brain, Piper TTS, and Silero VAD; the `lora/` package handles adapter training, a registry, and swap benchmarking. Demoed on QSR drive-thru order-taking, where order accuracy makes the improvement loop measurable. |
+
+Not linked here, since they're private: a voice-agent demo front end, and agent experiments covering
+persistent memory, automated debugging, and build orchestration. Happy to walk through any of them.
 
 ## Foundation Models — Implemented From Scratch
 
