@@ -15,6 +15,13 @@ compute humanoid platforms run on.
 
 ---
 
+**Featured — [*What the Robot Needs to See*](https://albertnew2012.github.io/openpi-pytorch/)** ·
+Do VLA attention maps track what actually drives the action? On π₀ / π₀.₅ they don't (*r* ≈ 0). Correcting
+for each token's measured receptive field lifts agreement with occlusion ground truth to *r* = 0.515,
+beating gradient attribution at ~50× lower cost than the occlusion baseline. [Details ↓](#vla-interpretability--what-the-robot-needs-to-see)
+
+---
+
 ## Experience
 
 | Role | Company | |
@@ -40,7 +47,8 @@ research-to-production path through ONNX/TensorRT and custom CUDA plugins onto O
 
 **Vision-Language-Action (VLA) Policies** — OpenVLA / OpenVLA-OFT, π0 (openpi), NVIDIA Isaac GR00T;
 diffusion & flow-matching action experts; action chunking, parallel decoding, continuous action regression;
-discrete action tokenization vs. continuous regression; imitation-learning fine-tuning
+discrete action tokenization vs. continuous regression; imitation-learning fine-tuning;
+policy interpretability — attention rollout, occlusion attribution, receptive-field analysis
 
 **Robot Learning & World Models** — World-model–action (WMA) architectures and latent world models;
 closed-loop future-state prediction; sim-to-real transfer; teleoperation & demonstration data pipelines
@@ -64,17 +72,41 @@ inference on NVIDIA Xavier / Orin / Thor, safety-OS deployment
 
 # Selected Repositories
 
+## VLA Interpretability — *What the Robot Needs to See*
+
+**[📊 Read the report](https://albertnew2012.github.io/openpi-pytorch/)** · [source](https://github.com/albertnew2012/openpi-pytorch)
+
+Attention maps show where a policy *looked*. Occlusion shows which pixels actually *change the action*.
+On π₀ / π₀.₅ over DROID and LIBERO, I measured how far apart those two are — and closed most of the gap.
+
+The fix: tokens don't see pixels one-to-one, so I measured each token's actual receptive field and
+relocated its attention through that mapping before scoring. Correlation against occlusion ground truth,
+Pearson *r* over 256 regions (16×16 grid, 14-px patches), 38-frame segments across six runs:
+
+| Method | *r* vs. occlusion |
+|---|---|
+| Raw attention, pooled across frames | +0.001 — no better than chance |
+| Attention on the token grid | −0.330 — actively misleading |
+| Gradient-based attribution | +0.469 |
+| **Attention relocated via measured receptive fields** | **+0.515** |
+
+It's also cheap: receptive-field mapping runs in **1.4 s** against a **71 s** occlusion baseline — ~50×
+faster for a faithfulness score that beats gradient attribution. The practical takeaway is that the
+attention visualizations the field routinely publishes for VLA policies do not track causal importance
+unless you correct for the spatial mapping first.
+
 ## Architecture Deep Dives
 
-Original study work — inference ports, ablations, visualizations, and written analysis I produced
-working through each architecture. Each lives on the `dev_albertl` branch of its repo.
+Original study work I produced working through each architecture, ordered as the progression they trace:
+language model → vision-language model → vision-language-action policy. Each lives on the `dev_albertl`
+branch of its repo.
 
 | Study | What I built |
 |---|---|
-| [PETR / PETRv2](https://github.com/albertnew2012/PETR/tree/dev_albertl) | ~6,600 lines in `petr_port/` — standalone inference port for PETR and PETRv2, a compatibility layer, and written deep dives on 3D positional encoding, query/reference-point construction, temporal modeling, and cls/reg confidence — plus frustum and BEV visualizations. |
+| [nanochat](https://github.com/albertnew2012/nanochat/tree/dev_albertl) | ~5,500 lines — a 16-part reading curriculum plus 14 runnable probes dissecting Karpathy's released d32 / base-d20 checkpoints on a single RTX 3090: KV-cache engine, sliding-window attention, RoPE, RMSNorm, minimal SFT, and tool use. Includes a backward-compatibility fix to `checkpoint_manager` so pre-`autoresearch` checkpoints load by zero-filling only the params that are exact no-ops in `forward()`. |
+| [nanoVLM](https://github.com/albertnew2012/nanoVLM/tree/dev_albertl) | ~6,400 lines — 11 docs and 18 probes tracing the LLM→VLM→VLA progression: image tokenizer, pixel shuffle, embedding splice into the LM space, contrastive loss, shape traces, and a `vla_bridge` script that adapts the VLM backbone toward action prediction. |
 | [OpenVLA](https://github.com/albertnew2012/openvla/tree/dev_albertl) | ~3,600 lines — LIBERO evaluation harness, QLoRA fine-tuning on a single RTX 3090, SimplerEnv zero-shot WidowX eval, an action-tokenization explainer, and a reproducible Docker setup. |
 | [OpenVLA-OFT](https://github.com/albertnew2012/openvla-oft/tree/dev_albertl) | ~2,800 lines — latency benchmark measuring effective control frequency, open-loop horizon ablation on the chunking speed/robustness tradeoff, parallel-decode attention-mask visualization, and a stage 0–3 training recipe. |
-| [nanochat](https://github.com/albertnew2012/nanochat/tree/dev_albertl) | ~5,500 lines — a 16-part reading curriculum plus 14 runnable probes dissecting Karpathy's released d32 / base-d20 checkpoints on a single RTX 3090: KV-cache engine, sliding-window attention, RoPE, RMSNorm, minimal SFT, and tool use. Includes a backward-compatibility fix to `checkpoint_manager` so pre-`autoresearch` checkpoints load by zero-filling only the params that are exact no-ops in `forward()`. |
 
 ## Robot Foundation Models
 
@@ -83,11 +115,10 @@ scheme determine the control frequency you can hit on embedded compute.
 
 | Repo | Role |
 |---|---|
-| [openpi-pytorch](https://github.com/albertnew2012/openpi-pytorch) | π0 reimplemented in PyTorch — flow-matching action expert, worked through end to end. |
+| [openpi-pytorch](https://github.com/albertnew2012/openpi-pytorch) | π0 reimplemented in PyTorch — flow-matching action expert, worked through end to end. Hosts the [interpretability study](https://albertnew2012.github.io/openpi-pytorch/) above. |
 | [Isaac-GR00T](https://github.com/albertnew2012/Isaac-GR00T) | NVIDIA's open humanoid VLA — VLM backbone with a diffusion transformer action head, cross-embodiment. |
 | [openvla](https://github.com/albertnew2012/openvla) | Autoregressive VLA baseline — discrete action tokens over a VLM backbone. |
 | [openpi](https://github.com/albertnew2012/openpi) | π0's flow-matching action expert, the contrast case to token decoding. |
-| [nanoVLM](https://github.com/albertnew2012/nanoVLM) | Minimal VLM training loop — the backbone half of a VLA, stripped down. |
 
 ## Agentic Systems
 
@@ -115,20 +146,17 @@ Building these end to end is how I work through an architecture rather than just
 
 ## 3D Perception & Sensor Fusion
 
+My own work, plus upstream implementations of the architectures behind the multimodal BEV fusion stack
+I build on professionally, mirrored here for experimentation.
+
 | Repo | What it is |
 |---|---|
+| [PETR / PETRv2](https://github.com/albertnew2012/PETR/tree/dev_albertl) | Camera-only 3D detection via 3D position-aware embeddings — the camera branch. My inference port and deep-dive study. |
 | [camera-lidar-sensor-fusion](https://github.com/albertnew2012/camera-lidar-sensor-fusion) | Camera-to-LiDAR fusion — projection, calibration, and fused 3D output. |
 | [detr](https://github.com/albertnew2012/detr) | DETR-style end-to-end detection with transformer decoders. |
 | [Driver-Attention-Monitor-System](https://github.com/albertnew2012/Driver-Attention-Monitor-System) | Face-orientation and drowsiness monitoring for driver state estimation. |
 | [UNET-Semantic-Segementation](https://github.com/albertnew2012/UNET-Semantic-Segementation) | U-Net semantic segmentation on Cityscapes. |
-
-**Stacks I work in.** Upstream implementations of the architectures behind the multimodal BEV fusion stack
-I build on professionally, mirrored here for experimentation.
-
-| Repo | Role in the stack |
-|---|---|
-| [PETR](https://github.com/albertnew2012/PETR) | Camera-only 3D detection via 3D position-aware embeddings — the camera branch. See the [deep dive](https://github.com/albertnew2012/PETR/tree/dev_albertl) above. |
-| [DSVT](https://github.com/albertnew2012/DSVT) | Dynamic sparse voxel transformer — the LiDAR branch. |
+| [DSVT](https://github.com/albertnew2012/DSVT) | Dynamic sparse voxel transformer — the LiDAR branch of the stack. |
 | [DSVT-AI-TRT](https://github.com/albertnew2012/DSVT-AI-TRT) | DSVT through CUDA/TensorRT/C++ — the path to real-time onboard inference. |
 | [Deformable-DETR](https://github.com/albertnew2012/Deformable-DETR) | Deformable attention, the block under most BEV detection heads. |
 
