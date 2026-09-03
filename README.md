@@ -1,4 +1,4 @@
-# Zhengzhi Liu
+# Albert Liu
 
 **Embodied AI & Robot Learning** — world models, vision-language-action policies, onboard deployment.
 
