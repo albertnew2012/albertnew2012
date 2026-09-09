@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" width="900" height="250" role="img" aria-label="The policy pipeline with three probe points: patch influence after the vision encoder, a VLM-depth probe after the language model, and occlusion at the action output.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#171a1f"/>
+        </marker>
+      </defs>
+      <g font-family="'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif" font-size="12.5" fill="#171a1f">
+        <!-- boxes -->
+        <rect x="18" y="70" width="132" height="58" fill="none" stroke="#171a1f" stroke-width="1.4"/>
+        <text x="84" y="94" text-anchor="middle" font-weight="600">SigLIP</text>
+        <text x="84" y="112" text-anchor="middle" font-size="11" opacity=".65">27 layers · 256 tok</text>
+
+        <rect x="242" y="70" width="150" height="58" fill="none" stroke="#171a1f" stroke-width="1.4"/>
+        <text x="317" y="94" text-anchor="middle" font-weight="600">Gemma-2B VLM</text>
+        <text x="317" y="112" text-anchor="middle" font-size="11" opacity=".65">18 layers · + prompt</text>
+
+        <rect x="484" y="70" width="150" height="58" fill="none" stroke="#171a1f" stroke-width="1.4"/>
+        <text x="559" y="94" text-anchor="middle" font-weight="600">action expert</text>
+        <text x="559" y="112" text-anchor="middle" font-size="11" opacity=".65">18 layers × 10 steps</text>
+
+        <rect x="726" y="70" width="118" height="58" fill="none" stroke="#171a1f" stroke-width="1.4"/>
+        <text x="785" y="99" text-anchor="middle" font-weight="600">action chunk</text>
+        <text x="785" y="116" text-anchor="middle" font-size="11" opacity=".65">10 × 8</text>
+
+        <!-- flow -->
+        <line x1="150" y1="99" x2="236" y2="99" stroke="#171a1f" stroke-width="1.4" marker-end="url(#ar)"/>
+        <line x1="392" y1="99" x2="478" y2="99" stroke="#171a1f" stroke-width="1.4" marker-end="url(#ar)"/>
+        <line x1="634" y1="99" x2="720" y2="99" stroke="#171a1f" stroke-width="1.4" marker-end="url(#ar)"/>
+
+        <!-- pixels in -->
+        <text x="18" y="52" font-size="11" opacity=".65">pixels →</text>
+        <text x="242" y="52" font-size="11" opacity=".65">instruction enters here ↓</text>
+        <line x1="317" y1="56" x2="317" y2="66" stroke="#171a1f" stroke-width="1.2" marker-end="url(#ar)"/>
+
+        <!-- probe markers -->
+        <g stroke-width="1.3">
+          <line x1="196" y1="128" x2="196" y2="168" stroke="#171a1f" stroke-dasharray="3 3"/>
+          <line x1="438" y1="128" x2="438" y2="168" stroke="#171a1f" stroke-dasharray="3 3"/>
+          <line x1="785" y1="128" x2="785" y2="168" stroke="#171a1f" stroke-dasharray="3 3"/>
+        </g>
+        <circle cx="196" cy="99" r="5" fill="#171a1f"/>
+        <circle cx="438" cy="99" r="5" fill="#171a1f"/>
+        <circle cx="785" cy="128" r="5" fill="#171a1f"/>
+
+        <text x="196" y="186" text-anchor="middle" font-weight="600" font-size="12">patch influence</text>
+        <text x="196" y="203" text-anchor="middle" font-size="11.5" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace">r = +0.733 · 1.4 s</text>
+        <text x="196" y="221" text-anchor="middle" font-size="11" opacity=".72">prompt-blind</text>
+
+        <text x="438" y="186" text-anchor="middle" font-weight="600" font-size="12">VLM-depth probe</text>
+        <text x="438" y="203" text-anchor="middle" font-size="11.5" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace">r = +0.924 · 20 s</text>
+        <text x="438" y="221" text-anchor="middle" font-size="11" opacity=".72">still ~prompt-blind</text>
+
+        <text x="785" y="186" text-anchor="middle" font-weight="600" font-size="12">occlusion</text>
+        <text x="785" y="203" text-anchor="middle" font-size="11.5" font-family="'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace">r = 1.000 · 71 s</text>
+        <text x="785" y="221" text-anchor="middle" font-size="11" opacity=".72">task-specific</text>
+      </g>
+    </svg>

@@ -79,6 +79,25 @@ inference on NVIDIA Xavier / Orin / Thor, safety-OS deployment
 Attention maps show where a policy *looked*. Occlusion shows which pixels actually *change the action*.
 On π₀ / π₀.₅ over DROID and LIBERO, I measured how far apart those two are — and closed most of the gap.
 
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/vla_camera_input.webp" alt="The camera the policy uses" width="100%">
+<br><b>The camera the policy uses</b>
+<br><sub>224×224, letterboxed — the black bars are padding, not scene</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/vla_occlusion_truth.webp" alt="OCCLUSION — the answer key" width="100%">
+<br><b>OCCLUSION — the answer key</b>
+<br><sub>cover a region, re-run everything, measure how far the action moved · <code>r = 1.000</code></sub>
+</td>
+</tr>
+</table>
+
+One DROID frame. The instruction is *"Put the blue block in the green bowl."* The answer key puts its
+weight on the table and the objects — attention plotted on the token grid instead burns some of its
+brightest heat into the black letterbox bars, where there are no pixels at all.
+
 The fix: tokens don't see pixels one-to-one, so I measured each token's actual receptive field and
 relocated its attention through that mapping before scoring. Correlation against occlusion ground truth,
 Pearson *r* over 256 regions (16×16 grid, 14-px patches), 38-frame segments across six runs:
@@ -94,6 +113,14 @@ It's also cheap: receptive-field mapping runs in **1.4 s** against a **71 s** oc
 faster for a faithfulness score that beats gradient attribution. The practical takeaway is that the
 attention visualizations the field routinely publishes for VLA policies do not track causal importance
 unless you correct for the spatial mapping first.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/probe-ladder-dark.svg">
+  <img alt="The policy pipeline with three probe points: patch influence after the vision encoder, a VLM-depth probe after the language model, and occlusion at the action output." src="assets/probe-ladder-light.svg" width="100%">
+</picture>
+
+Every probe in the report is the *same* intervention — destroy one input patch — read at a different
+depth. The *r* values are against the rightmost probe, which is the ground truth by definition.
 
 ## Alpamayo 1.5 — A Perception Head on a Frozen Driving VLA
 
