@@ -24,11 +24,6 @@ compute humanoid platforms run on.
 | Senior ADAS System Development Engineer | **Audi of America** (Volkswagen Group) — San Jose, CA | 05/2022 – 01/2024 |
 | Research Scientist | **RefleXion Medical** — Hayward, CA | 01/2020 – 05/2022 |
 
-At Lucid: a multimodal fusion backbone unifying LiDAR (DSVT), camera (PETR), and language embeddings in a
-shared BEV latent space; an end-to-end world model coupling 3D perception with latent scene prediction; an
-LLM-agent-orchestrated auto-labeling engine for large multimodal training sets; and ownership of the
-research-to-production path through ONNX/TensorRT and custom CUDA plugins onto Orin/Thor embedded compute.
-
 ## Education
 
 | | | |
