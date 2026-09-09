@@ -65,8 +65,9 @@ inference on NVIDIA Xavier / Orin / Thor, safety-OS deployment
 **[📊 Read the report](https://albertnew2012.github.io/openpi-pytorch/)** · [source](https://github.com/albertnew2012/openpi-pytorch)
 
 Attention shows where a policy *looked*; occlusion shows which pixels actually *change the action*.
-On π₀ / π₀.₅ they barely agree — and correcting for each token's measured receptive field closes most
-of the gap.
+On π₀ / π₀.₅ they barely agree (*r* ≈ 0). Relocating attention through each token's measured receptive
+field lifts it to ***r* = 0.515** — past gradient attribution, at **1.4 s** against the occlusion
+baseline's **71 s**.
 
 <table>
 <tr>
@@ -82,17 +83,6 @@ of the gap.
 </td>
 </tr>
 </table>
-
-Pearson *r* against occlusion ground truth, 256 regions per frame:
-
-| Method | *r* vs. occlusion |
-|---|---|
-| Raw attention, pooled across frames | +0.001 — no better than chance |
-| Attention on the token grid | −0.330 — actively misleading |
-| Gradient-based attribution | +0.469 |
-| **Attention relocated via measured receptive fields** | **+0.515** |
-
-At **1.4 s** against a **71 s** occlusion baseline — ~50× cheaper than the ground truth it approximates.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/probe-ladder-dark.svg">
