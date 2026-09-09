@@ -15,13 +15,6 @@ compute humanoid platforms run on.
 
 ---
 
-**Featured — [*What the Robot Needs to See*](https://albertnew2012.github.io/openpi-pytorch/)** ·
-Do VLA attention maps track what actually drives the action? On π₀ / π₀.₅ they don't (*r* ≈ 0). Correcting
-for each token's measured receptive field lifts agreement with occlusion ground truth to *r* = 0.515,
-beating gradient attribution at ~50× lower cost than the occlusion baseline. [Details ↓](#vla-interpretability--what-the-robot-needs-to-see)
-
----
-
 ## Experience
 
 | Role | Company | |
