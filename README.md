@@ -76,8 +76,9 @@ inference on NVIDIA Xavier / Orin / Thor, safety-OS deployment
 
 **[📊 Read the report](https://albertnew2012.github.io/openpi-pytorch/)** · [source](https://github.com/albertnew2012/openpi-pytorch)
 
-Attention maps show where a policy *looked*. Occlusion shows which pixels actually *change the action*.
-On π₀ / π₀.₅ over DROID and LIBERO, I measured how far apart those two are — and closed most of the gap.
+Attention shows where a policy *looked*; occlusion shows which pixels actually *change the action*.
+On π₀ / π₀.₅ they barely agree — and correcting for each token's measured receptive field closes most
+of the gap.
 
 <table>
 <tr>
@@ -94,13 +95,7 @@ On π₀ / π₀.₅ over DROID and LIBERO, I measured how far apart those two a
 </tr>
 </table>
 
-One DROID frame. The instruction is *"Put the blue block in the green bowl."* The answer key puts its
-weight on the table and the objects — attention plotted on the token grid instead burns some of its
-brightest heat into the black letterbox bars, where there are no pixels at all.
-
-The fix: tokens don't see pixels one-to-one, so I measured each token's actual receptive field and
-relocated its attention through that mapping before scoring. Correlation against occlusion ground truth,
-Pearson *r* over 256 regions (16×16 grid, 14-px patches), 38-frame segments across six runs:
+Pearson *r* against occlusion ground truth, 256 regions per frame:
 
 | Method | *r* vs. occlusion |
 |---|---|
@@ -109,57 +104,36 @@ Pearson *r* over 256 regions (16×16 grid, 14-px patches), 38-frame segments acr
 | Gradient-based attribution | +0.469 |
 | **Attention relocated via measured receptive fields** | **+0.515** |
 
-It's also cheap: receptive-field mapping runs in **1.4 s** against a **71 s** occlusion baseline — ~50×
-faster for a faithfulness score that beats gradient attribution. The practical takeaway is that the
-attention visualizations the field routinely publishes for VLA policies do not track causal importance
-unless you correct for the spatial mapping first.
+At **1.4 s** against a **71 s** occlusion baseline — ~50× cheaper than the ground truth it approximates.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/probe-ladder-dark.svg">
   <img alt="The policy pipeline with three probe points: patch influence after the vision encoder, a VLM-depth probe after the language model, and occlusion at the action output." src="assets/probe-ladder-light.svg" width="100%">
 </picture>
 
-Every probe in the report is the *same* intervention — destroy one input patch — read at a different
-depth. The *r* values are against the rightmost probe, which is the ground truth by definition.
+Every probe is the same intervention — destroy one input patch — read at a different depth.
 
 ## Alpamayo 1.5 — A Perception Head on a Frozen Driving VLA
 
 **[repo](https://github.com/albertnew2012/alpamayo1.5/tree/dev_albertl)** · fork of NVIDIA's Alpamayo 1.5 (11.08 B driving VLA)
 
-Alpamayo predicts a trajectory and emits no perception output at all. I bolted a 3D/2D detection
-head onto the **frozen** model to ask one question: how much spatial information is already in the
-representation the trajectory head reads?
+Alpamayo predicts a trajectory and emits no perception output at all. I hooked a 3D/2D detection head
+onto the **frozen** model to ask how much spatial information the trajectory head's representation
+already carries.
 
 ![perception head on a held-out clip](https://raw.githubusercontent.com/albertnew2012/alpamayo1.5/dev_albertl/assets/perception_demo.gif)
 
-*Held-out validation clip. Solid cuboids are detections in the camera that found them, dashed the
-same box reprojected into another view. Cyan is Alpamayo's own predicted 6.4 s trajectory, amber the
-path actually driven, and the caption is its live chain-of-causation.*
+*Held-out clip. Solid cuboids are detections in the camera that found them, dashed the same box
+reprojected elsewhere; cyan is Alpamayo's predicted 6.4 s trajectory, amber the path actually driven.*
 
-A forward hook copies decoder layer 24's image tokens during prefill — nothing is written back.
-**28.44 M trained parameters against 11.08 B frozen (+0.26 %)**, `src/alpamayo1_5/` has 0 modified
-files (enforced by a test), and the 64 waypoints are bit-identical whether the head runs or not.
-The VLM is never loaded during training: features are cached offline, so the head trains in ~90 s
-per epoch on a single RTX 3090.
+**28.44 M trained parameters against 11.08 B frozen (+0.26 %)** — a forward hook reads decoder layer 24
+and nothing is written back, so the waypoints are bit-identical whether the head runs or not. Features
+are cached offline, so the VLM never loads during training and the head fits one RTX 3090.
 
-Alongside it, a **bit-exact reimplementation of the inference path** — every tensor from raw clip to
-the 64 waypoints, verified against the released implementation across all 23 stages (every diff row
-exactly `0.000e+00`, renders byte-identical).
-
-The most useful result, over ~17 experiments: *every* change to supervision or task definition
-worked, and *every* change to architecture or input resolution failed.
-
-| changed | result |
-|---|---|
-| best-camera labelling *(supervision)* | 2× objects detected |
-| resolvable-only targets *(task definition)* | mAP 0.064 → 0.294 |
-| ignore regions *(supervision)* | pedestrian recall 2.4 % → 16.1 % |
-| projection-consistency loss *(supervision)* | 3D error −15 %, bearing −18 % |
-| DETR-faithful decoder *(architecture)* | −12 % |
-| 2× input pixels *(input)* | −15 % |
-| 4×-finer feature grid *(input)* | 0 % |
-
-The frozen features were consistently better than the use made of them.
+Alongside it, a **bit-exact reimplementation of the inference path**, verified against the released
+implementation across all 23 stages. Over ~17 experiments, *every* change to supervision or task
+definition worked and *every* change to architecture or input resolution failed — the frozen features
+were consistently better than the use made of them.
 
 ## Architecture Deep Dives
 
