@@ -95,6 +95,45 @@ faster for a faithfulness score that beats gradient attribution. The practical t
 attention visualizations the field routinely publishes for VLA policies do not track causal importance
 unless you correct for the spatial mapping first.
 
+## Alpamayo 1.5 — A Perception Head on a Frozen Driving VLA
+
+**[repo](https://github.com/albertnew2012/alpamayo1.5/tree/dev_albertl)** · fork of NVIDIA's Alpamayo 1.5 (11.08 B driving VLA)
+
+Alpamayo predicts a trajectory and emits no perception output at all. I bolted a 3D/2D detection
+head onto the **frozen** model to ask one question: how much spatial information is already in the
+representation the trajectory head reads?
+
+![perception head on a held-out clip](https://raw.githubusercontent.com/albertnew2012/alpamayo1.5/dev_albertl/assets/perception_demo.gif)
+
+*Held-out validation clip. Solid cuboids are detections in the camera that found them, dashed the
+same box reprojected into another view. Cyan is Alpamayo's own predicted 6.4 s trajectory, amber the
+path actually driven, and the caption is its live chain-of-causation.*
+
+A forward hook copies decoder layer 24's image tokens during prefill — nothing is written back.
+**28.44 M trained parameters against 11.08 B frozen (+0.26 %)**, `src/alpamayo1_5/` has 0 modified
+files (enforced by a test), and the 64 waypoints are bit-identical whether the head runs or not.
+The VLM is never loaded during training: features are cached offline, so the head trains in ~90 s
+per epoch on a single RTX 3090.
+
+Alongside it, a **bit-exact reimplementation of the inference path** — every tensor from raw clip to
+the 64 waypoints, verified against the released implementation across all 23 stages (every diff row
+exactly `0.000e+00`, renders byte-identical).
+
+The most useful result, over ~17 experiments: *every* change to supervision or task definition
+worked, and *every* change to architecture or input resolution failed.
+
+| changed | result |
+|---|---|
+| best-camera labelling *(supervision)* | 2× objects detected |
+| resolvable-only targets *(task definition)* | mAP 0.064 → 0.294 |
+| ignore regions *(supervision)* | pedestrian recall 2.4 % → 16.1 % |
+| projection-consistency loss *(supervision)* | 3D error −15 %, bearing −18 % |
+| DETR-faithful decoder *(architecture)* | −12 % |
+| 2× input pixels *(input)* | −15 % |
+| 4×-finer feature grid *(input)* | 0 % |
+
+The frozen features were consistently better than the use made of them.
+
 ## Architecture Deep Dives
 
 Original study work I produced working through each architecture, ordered as the progression they trace:
