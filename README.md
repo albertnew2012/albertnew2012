@@ -62,7 +62,7 @@ inference on NVIDIA Xavier / Orin / Thor, safety-OS deployment
 
 ## VLA Interpretability — *What the Robot Needs to See*
 
-**[📊 Read the report](https://albertnew2012.github.io/openpi-pytorch/)** · [source](https://github.com/albertnew2012/openpi-pytorch)
+**[📊 Read the report](https://albertnew2012.github.io/openpi-pytorch/)** · [openpi-pytorch](https://github.com/albertnew2012/openpi-pytorch)
 
 Attention shows where a policy *looked*; occlusion shows which pixels actually *change the action*.
 On π₀ / π₀.₅ they barely agree (*r* ≈ 0). Relocating attention through each token's measured receptive
@@ -93,7 +93,7 @@ Every probe is the same intervention — destroy one input patch — read at a d
 
 ## Alpamayo 1.5 — A Perception Head on a Frozen Driving VLA
 
-**[repo](https://github.com/albertnew2012/alpamayo1.5/tree/dev_albertl)** · fork of NVIDIA's Alpamayo 1.5 (11.08 B driving VLA)
+**[alpamayo1.5](https://github.com/albertnew2012/alpamayo1.5/tree/dev_albertl)** · fork of NVIDIA's Alpamayo 1.5 (11.08 B driving VLA)
 
 Alpamayo predicts a trajectory and emits no perception output at all. I hooked a 3D/2D detection head
 onto the **frozen** model to ask how much spatial information the trajectory head's representation
